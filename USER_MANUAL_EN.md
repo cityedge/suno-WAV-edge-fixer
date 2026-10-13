@@ -1,6 +1,6 @@
 # Suno WAV Edge Fixer — User Manual
 
-**Applies to v0.3 · Updated October 9, 2026**
+**Applies to v0.3.1 · Updated October 9, 2026**
 
 ## 1. Purpose
 
@@ -60,6 +60,14 @@ Select a range and press **Play selection**. While playing, the button is green 
 
 **Undo** reverts the last edit to the current track. It works for silence, fades, trim, and append; you may undo multiple edits in reverse order. **Redo is not available**. Removing a queued track is not undoable, although you can import the original file again.
 
+**Check noise:** Select the sound to inspect and press **Check noise**, immediately to the left of **Play selection** in either panel. The app analyzes the entire selection and plays it once using a fixed gain shared between stereo channels. Click again, or press **Space / Escape**, to stop. Selection, zoom, and track changes also stop playback.
+
+The automatic preview uses a fixed profile: **−18 dBFS maximum short-window RMS and a −12 dBFS sample-peak ceiling**. There is no preview level selector or separate preview row.
+
+The loudest sliding 50 ms RMS window per channel and the full-selection peak both constrain gain, with at most +60 dB amplification. Shorter selections use their full length. Loud selections are attenuated. No compressor, EQ, or fade alters the noise's dynamics. If a large click prevents quieter sounds from being audible, narrow the selection. Silent selections do not play, and non-finite samples are rejected.
+
+These limits apply to digital buffer samples; actual listening volume depends on your device settings. They are **not calibrated sound-pressure or true-peak limits** after browser resampling or hardware output. More than two channels are averaged to mono for noise preview only; opposite-phase channels may cancel. Preview processing never changes the source, edits, Undo history, or exported WAV. Display gain and ordinary playback remain independent.
+
 Shortcuts refer to the **last waveform you clicked or dragged**:
 
 | Shortcut | Action |
@@ -67,10 +75,11 @@ Shortcuts refer to the **last waveform you clicked or dragged**:
 | `M` | Silence the current selection |
 | `F` | Head: fade in / Tail: fade out |
 | `Space` | Play/stop current selection |
+| `Escape` | Stop normal or noise playback |
 | `Ctrl + Z` (macOS: `⌘ + Z`) | Undo latest edit |
 | `Enter` | Save and remove current track |
 
-Except for Undo, these shortcuts are inactive when a button or an input field has focus. `Ctrl/⌘ + Z` may still undo the app edit while an input field is focused.
+Playback stops with Space or Escape regardless of focus. Other shortcuts except Undo are inactive when a button or an input field has focus. `Ctrl/⌘ + Z` may still undo the app edit while an input field is focused.
 
 ## 7. Downloading versus removing
 
@@ -97,7 +106,7 @@ Unusual WAVE chunk structures or location-dependent metadata may not be fully su
 
 ## 9. Troubleshooting
 
-- **A tiny click is visible but inaudible:** display gain is graphical only; playback volume is unchanged.
+- **A tiny click is visible but inaudible:** display gain is graphical only. Select the sound and press **Check noise**.
 - **The waveform hits the plot edges:** reduce display gain. This is not evidence of source audio clipping.
 - **A WAV does not load:** it may be a compressed, malformed or otherwise unsupported WAV. Try standard integer PCM WAV. Renaming MP3 to `.wav` does not convert it.
 - **Cannot find an exported file:** inspect your browser's download list (usually `Ctrl + J`) and download settings.

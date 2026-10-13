@@ -1,6 +1,17 @@
 # Changelog
 
-## v0.3 — 2026-10-09
+## v0.3.1 — 2026-10-09
+
+- Added **Check noise** buttons to Head and Tail, immediately before **Play selection** in the existing control rows.
+- Analyze the full selection before playback: shared fixed gain constrained by the loudest sliding 50 ms RMS window, a sample-peak ceiling, and a maximum boost of +60 dB.
+- Use a fixed preview profile (−18 dBFS RMS / −12 dBFS sample peak), without a level selector or separate preview row.
+- Preview processing does not affect edits, Undo, or WAV exports. Silent selections do not start playback; non-finite samples are rejected.
+- Added Space / Escape to stop noise playback; changing the selection also stops playback. More than two channels are averaged to mono for noise preview only.
+- Added narrow-screen layout support and automated signal-processing regression checks.
+- Display the app version beside its name and in the browser tab title.
+- Output limits are digital sample limits, not calibrated sound-pressure or true-peak limits; lower device volume before listening.
+
+## v0.3.0 — 2026-10-09
 
 - Added **Remove WAV from list**, allowing tracks with no needed repairs to be discarded from the queue without downloading.
 - Changed waveform time labels to **red**, improving readability over dense waveforms.

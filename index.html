@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Suno WAV Edge Fixer</title>
+<title>Suno WAV Edge Fixer v0.3.1</title>
 <style>
   :root {
     color-scheme: dark;
@@ -82,6 +82,14 @@
     font-weight: 700;
     letter-spacing: .02em;
     margin-bottom: 10px;
+  }
+  .version {
+    margin-left: 6px;
+    color: var(--muted);
+    font-size: 11px;
+    font-weight: 400;
+    letter-spacing: 0;
+    white-space: nowrap;
   }
   .add-row { display: flex; gap: 8px; }
   .add-row button { flex: 1; }
@@ -270,13 +278,28 @@
     #app { grid-template-columns: 210px minmax(0, 1fr); }
     .gain-wrap input { width: 110px; }
   }
+  @media (max-width: 600px) {
+    #app { grid-template-columns: minmax(0, 1fr); grid-template-rows: 180px minmax(0, 1fr); }
+    .sidebar { min-height: 0; border-right: 0; border-bottom: 1px solid var(--border); }
+    .sidebar-head { padding: 6px 10px; }
+    .brand { font-size: 14px; margin-bottom: 4px; }
+    .add-row, .remove-row { display: inline-block; margin: 0; }
+    .sidebar-head button { padding: 5px 7px; font-size: 12px; }
+    .track-list { min-height: 0; padding: 2px 8px; }
+    .sidebar-foot { padding: 4px 10px; }
+    .main { min-height: 0; }
+    .topbar { flex-wrap: wrap; }
+    .filename { flex-basis: 100%; }
+    .meta { white-space: normal; flex-basis: 100%; }
+    .workspace { padding: 6px; grid-template-rows: minmax(410px, 1fr) minmax(460px, 1fr); }
+  }
 </style>
 </head>
 <body>
 <div id="app">
   <aside class="sidebar">
     <div class="sidebar-head">
-      <div class="brand">Suno WAV Edge Fixer</div>
+      <div class="brand">Suno WAV Edge Fixer<span id="appVersion" class="version">v0.3.1</span></div>
       <div class="add-row">
         <button id="addFilesBtn" data-i18n="addFiles">WAVを追加</button>
         <input id="fileInput" type="file" accept="audio/wav,.wav" multiple hidden />
@@ -314,6 +337,7 @@
         </div>
         <div class="wave-wrap"><canvas id="headCanvas" class="wave"></canvas></div>
         <div class="panel-foot">
+          <button id="headNoiseBtn" data-i18n="noisePreview" data-i18n-title="noisePreviewHint" aria-pressed="false" disabled>ノイズ確認</button>
           <button id="headPlayBtn" data-i18n="playSelection" disabled>選択範囲を再生</button>
           <button id="headMuteBtn" class="danger" data-i18n="silenceSelection" disabled>選択範囲を無音</button>
           <button id="headFadeBtn" data-i18n="fadeInSelection" disabled>選択範囲をフェードイン</button>
@@ -334,6 +358,7 @@
         </div>
         <div class="wave-wrap"><canvas id="tailCanvas" class="wave"></canvas></div>
         <div class="panel-foot">
+          <button id="tailNoiseBtn" data-i18n="noisePreview" data-i18n-title="noisePreviewHint" aria-pressed="false" disabled>ノイズ確認</button>
           <button id="tailPlayBtn" data-i18n="playSelection" disabled>選択範囲を再生</button>
           <button id="tailMuteBtn" class="danger" data-i18n="silenceSelection" disabled>選択範囲を無音</button>
           <button id="tailFadeBtn" data-i18n="fadeOutSelection" disabled>選択範囲をフェードアウト</button>
@@ -361,6 +386,9 @@
 
   const I18N = {
     ja: {
+      noisePreview: 'ノイズ確認', noisePlaying: '■ ノイズ確認中（停止）',
+      noisePreviewHint: '選択範囲の小さな音を試聴用に増幅して再生します。保存するWAVには反映しません。',
+      previewSilent: '選択範囲は無音です', previewInvalid: '音声に不正な数値があるため試聴できません。',
       addFiles: 'WAVを追加', removeWav: 'WAVをリストから削除',
       removeWavHint: '選択中のWAVを保存・ダウンロードせずにリストから削除します。',
       removed: 'リストから削除しました',
@@ -387,6 +415,9 @@
       select: '選択', dur: '長さ'
     },
     en: {
+      noisePreview: 'Check noise', noisePlaying: '■ Checking noise (stop)',
+      noisePreviewHint: 'Amplify quiet sounds in the selection for playback only. The exported WAV is unchanged.',
+      previewSilent: 'The selection is silent', previewInvalid: 'Cannot preview audio containing invalid sample values.',
       addFiles: 'Add WAVs', removeWav: 'Remove WAV from list',
       removeWavHint: 'Remove the selected WAV from the list without saving or downloading it.',
       removed: 'Removed from list',
@@ -422,6 +453,7 @@
   let audioCtx = null;
   let activeSource = null;
   let playingKind = null;
+  let playingMode = null;
   let playbackToken = 0;
   let isSaving = false;
   let statusTimer = 0;
@@ -430,6 +462,53 @@
     head: { canvas: $('headCanvas'), gain: 40, windowSec: 1.0, minWindow: 0.05, maxWindow: 10.0, selection: null },
     tail: { canvas: $('tailCanvas'), gain: 20, windowSec: 5.0, minWindow: 0.50, maxWindow: 20.0, selection: null }
   };
+
+  const NOISE_PREVIEW_LIMITS = { rmsDb: -18, peakDb: -12 };
+
+  // Analyze the entire selection before playback. Use the loudest sliding
+  // 50 ms RMS window (per channel), so silence cannot dilute the estimate.
+  // A single fixed gain preserves dynamics and stereo balance; no compressor,
+  // EQ, or fade that could conceal the transient being inspected.
+  function prepareNoisePreview(channels, start, end, sampleRate) {
+    const count = end - start;
+    const mono = channels.length > 2;
+    const output = Array.from({ length: mono ? 1 : channels.length }, () => new Float32Array(count));
+    for (let i = 0; i < count; i++) {
+      for (let ch = 0; ch < channels.length; ch++) {
+        const value = channels[ch][start + i];
+        if (!Number.isFinite(value)) throw new Error(t('previewInvalid'));
+        if (mono) output[0][i] += value / channels.length;
+        else output[ch][i] = value;
+      }
+    }
+    let peak = 0, maxMeanSquare = 0;
+    const windowFrames = Math.max(1, Math.min(count, Math.round(sampleRate * 0.05)));
+    for (const ch of output) {
+      let sum = 0;
+      for (let i = 0; i < count; i++) {
+        peak = Math.max(peak, Math.abs(ch[i]));
+        sum += ch[i] * ch[i];
+        if (i >= windowFrames) sum -= ch[i - windowFrames] * ch[i - windowFrames];
+        if (i >= windowFrames - 1) maxMeanSquare = Math.max(maxMeanSquare, sum / windowFrames);
+      }
+    }
+    if (!Number.isFinite(peak) || !Number.isFinite(maxMeanSquare)) throw new Error(t('previewInvalid'));
+    if (peak === 0) return { channels: output, silent: true, mono };
+    const setting = NOISE_PREVIEW_LIMITS;
+    const rms = Math.sqrt(maxMeanSquare);
+    // Cap amplification at +60 dB; allow attenuation for accidentally selected music.
+    // Margin prevents Float32 rounding from exceeding the sample-peak ceiling.
+    const gain = Math.min(1000, 10 ** (setting.peakDb / 20) / peak,
+      rms > 0 ? 10 ** (setting.rmsDb / 20) / rms : 1000) * (1 - 1e-6);
+    let outputPeak = 0;
+    for (const ch of output) {
+      for (let i = 0; i < count; i++) {
+        ch[i] *= gain;
+        outputPeak = Math.max(outputPeak, Math.abs(ch[i]));
+      }
+    }
+    return { channels: output, gainDb: 20 * Math.log10(gain), peakDb: 20 * Math.log10(outputPeak), mono, silent: false };
+  }
 
   function t(key) { return I18N[lang][key] ?? key; }
 
@@ -1036,6 +1115,10 @@
     const hasCurrent = !!current;
     const hs = !!selectionToFrames('head');
     const ts = !!selectionToFrames('tail');
+    for (const kind of ['head', 'tail']) {
+      const range = selectionToFrames(kind);
+      $(kind + 'NoiseBtn').disabled = !range || isSaving;
+    }
     $('removeWavBtn').disabled = isSaving || currentIndex < 0 || !tracks[currentIndex];
     $('headPlayBtn').disabled = !hs || isSaving;
     $('headMuteBtn').disabled = !hs || isSaving;
@@ -1107,6 +1190,7 @@
     canvas.addEventListener('wheel', ev => {
       if (!current) return;
       ev.preventDefault();
+      stopPlayback();
       const v = views[kind];
       const factor = ev.deltaY < 0 ? 0.8 : 1.25;
       v.windowSec = Math.max(v.minWindow, Math.min(v.maxWindow, v.windowSec * factor, current.info.duration || v.maxWindow));
@@ -1169,11 +1253,13 @@
 
   function updatePlaybackUI() {
     for (const kind of ['head', 'tail']) {
-      const el = $(kind + 'PlayBtn');
-      const active = activeSource !== null && playingKind === kind;
-      el.classList.toggle('playing', active);
-      el.setAttribute('aria-pressed', String(active));
-      el.textContent = active ? t('playingSelection') : t('playSelection');
+      for (const mode of ['normal', 'noise']) {
+        const el = $(kind + (mode === 'noise' ? 'NoiseBtn' : 'PlayBtn'));
+        const active = activeSource !== null && playingKind === kind && playingMode === mode;
+        el.classList.toggle('playing', active);
+        el.setAttribute('aria-pressed', String(active));
+        el.textContent = mode === 'noise' ? t(active ? 'noisePlaying' : 'noisePreview') : t(active ? 'playingSelection' : 'playSelection');
+      }
     }
   }
 
@@ -1184,14 +1270,15 @@
       activeSource = null;
     }
     playingKind = null;
+    playingMode = null;
     updatePlaybackUI();
   }
 
-  async function playSelection(kind) {
-    if (!current) return;
+  async function playSelection(kind, mode = 'normal') {
+    if (!current || isSaving) return;
     const r = selectionToFrames(kind);
     if (!r) return;
-    const alreadyPlaying = activeSource && playingKind === kind;
+    const alreadyPlaying = activeSource && playingKind === kind && playingMode === mode;
     stopPlayback();
     if (alreadyPlaying) return;
     const token = playbackToken;
@@ -1201,9 +1288,16 @@
       if (audioCtx.state === 'suspended') await audioCtx.resume();
       if (token !== playbackToken || current !== track) return;
       const len = r.endFrame - r.startFrame;
-      const buffer = audioCtx.createBuffer(current.info.channels, len, current.info.sampleRate);
-      for (let ch = 0; ch < current.info.channels; ch++) {
-        buffer.copyToChannel(current.workingChannels[ch].subarray(r.startFrame, r.endFrame), ch, 0);
+      let channels = current.workingChannels.map(ch => ch.subarray(r.startFrame, r.endFrame));
+      if (mode === 'noise') {
+        const preview = prepareNoisePreview(current.workingChannels, r.startFrame, r.endFrame,
+          current.info.sampleRate);
+        if (preview.silent) return showStatus(t('previewSilent'));
+        channels = preview.channels;
+      }
+      const buffer = audioCtx.createBuffer(channels.length, len, current.info.sampleRate);
+      for (let ch = 0; ch < channels.length; ch++) {
+        buffer.copyToChannel(channels[ch], ch, 0);
       }
       const src = audioCtx.createBufferSource();
       src.buffer = buffer;
@@ -1212,11 +1306,13 @@
         if (activeSource === src) {
           activeSource = null;
           playingKind = null;
+          playingMode = null;
           updatePlaybackUI();
         }
       };
       activeSource = src;
       playingKind = kind;
+      playingMode = mode;
       src.start();
       updatePlaybackUI();
     } catch (err) {
@@ -1255,6 +1351,7 @@
 
   async function saveAndRemove() {
     if (!current || currentIndex < 0 || isSaving) return;
+    stopPlayback();
     isSaving = true;
     updateControls();
     renderTrackList();
@@ -1313,6 +1410,9 @@
   $('tailAppendBtn').addEventListener('click', appendTailSilence);
   $('headPlayBtn').addEventListener('click', () => playSelection('head'));
   $('tailPlayBtn').addEventListener('click', () => playSelection('tail'));
+  for (const kind of ['head', 'tail']) {
+    $(kind + 'NoiseBtn').addEventListener('click', () => playSelection(kind, 'noise'));
+  }
   $('undoBtn').addEventListener('click', undo);
   $('saveBtn').addEventListener('click', saveAndRemove);
 
@@ -1325,6 +1425,8 @@
     views[kind].canvas.addEventListener('pointerdown', () => { lastTouched = kind; });
   }
   window.addEventListener('keydown', ev => {
+    if (ev.key === 'Escape') { ev.preventDefault(); stopPlayback(); return; }
+    if (ev.key === ' ' && activeSource) { ev.preventDefault(); stopPlayback(); return; }
     if (ev.ctrlKey || ev.metaKey) {
       if (ev.key.toLowerCase() === 'z') { ev.preventDefault(); undo(); }
       return;
