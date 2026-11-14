@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.3.3 — 2026-11-14
+
+- Reserved a fixed selection-information area in each panel. Head and Tail wrap independently based on their own controls and available width; empty, position and range states keep the waveform height unchanged. Long labels remain on one line, with the full text available on hover.
+- Tail clicks now select only that position with zero width, shown as a vertical line and position time. They no longer select through the file end. Head clicks still clear selection, and dragging selects a range in both panels.
+- Zero-width selection is used only for tail trimming. Playback, noise preview, silence and fade require a range. A zero-width click is no longer rounded into a one-sample range; trimming from a dragged range still uses its left edge.
+- Updated Japanese/English hints and manuals, with regression coverage for position/range trimming, endpoints, keyboard edits, hover stability and narrow-screen controls.
+
 ## v0.3.2 — 2026-11-14
 
 - Fixed waveform selection continuing on hover after pointer capture or window focus was lost. Selection now also checks the pressed mouse button and active pointer.

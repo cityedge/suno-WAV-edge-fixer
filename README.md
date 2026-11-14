@@ -1,8 +1,8 @@
 # Suno WAV Edge Fixer
 
-**バージョン：v0.3.2**
+**バージョン：v0.3.3**
 
-v0.3.2では、マウスを離した後も波形の選択が追従する問題と、ドラッグ中のホイール操作によるエラーを修正しました。
+v0.3.3では、クリック操作と表示レイアウトを更新しました。末尾クリックは、その位置を幅ゼロで選択し、末尾削除にだけ使います。試聴・ノイズ確認・無音化・フェードにはドラッグによる範囲選択が必要です。先頭クリックは選択解除です。先頭・末尾の操作欄は横幅とボタン数に応じて独立して折り返し、選択情報の長さで波形の高さが変わらないようにしました。
 
 **Sunoなどで生成したWAV音源の先頭・末尾だけを、ブラウザで手早く修正するツールです。**
 
@@ -23,7 +23,7 @@ v0.3.2では、マウスを離した後も波形の選択が追従する問題�
 
 1. `index.html` を Chrome または Edge で開きます。あるいは、GitHub Pages で公開したページにアクセスします。
 2. WAVファイルをまとめてドラッグ＆ドロップするか、左上の **「WAVを追加」** から読み込みます。
-3. 左側の曲を選び、**先頭／末尾の波形上をドラッグ**して修正したい範囲を選択します。末尾波形は**クリックだけでクリック位置〜終端**を選択できます。
+3. 左側の曲を選び、**先頭／末尾の波形上をドラッグ**して修正したい範囲を選択します。先頭側のクリックは選択解除、末尾側のクリックは**その位置を幅ゼロで選択**します。末尾の位置選択は「選択開始位置から末尾を削除」に使えます。試聴・無音化・フェードにはドラッグによる範囲選択が必要です。
 4. 必要なら **「ノイズ確認」** で音を聞いてから、**「選択範囲を無音」「選択範囲をフェードイン／アウト」** などを実行します。**「元に戻す」**、通常音量での選択範囲の再生も利用できます。
 5. **「保存してリストから削除」** を押すと、元と同じファイル名のWAVのダウンロードを開始し、曲をリストから外します。修正不要な曲は、左の **「WAVをリストから削除」** でダウンロードせずに外します。
 
@@ -71,6 +71,8 @@ MIT License — Copyright (c) 2026 cityedge. 詳細は [LICENSE](LICENSE) を参
 
 ## English overview
 
-**Suno WAV Edge Fixer v0.3.2** is a lightweight, offline, browser-based editor for cleaning up the **beginning and end** of WAV tracks. Inspect very quiet clicks using display-only gain (+0 to +60 dB), audition them with **Check noise**, silence a selection, apply a linear fade-in/out, trim the end, or append silence. Queue multiple tracks, download each edited WAV under its original filename, or remove unaffected tracks from the list without downloading them.
+Tail clicks now select a zero-width position for trimming only. Playback, noise checking, silence and fade require a dragged range; Head clicks clear selection. Each panel wraps independently and reserves selection-information space so selecting audio does not resize the waveform.
+
+**Suno WAV Edge Fixer v0.3.3** is a lightweight, offline, browser-based editor for cleaning up the **beginning and end** of WAV tracks. Inspect very quiet clicks using display-only gain (+0 to +60 dB), audition them with **Check noise**, silence a selection, apply a linear fade-in/out, trim the end, or append silence. Queue multiple tracks, download each edited WAV under its original filename, or remove unaffected tracks from the list without downloading them.
 
 Open `index.html` in desktop Chrome or Edge; no installation, build process, server, or upload is required. The interface supports both Japanese and English. Output remains in the source WAV's sample rate, channel count and sample format. **See the [English user manual](USER_MANUAL_EN.md)** for steps, shortcuts and limitations. Licensed under the [MIT License](LICENSE).

@@ -1,6 +1,6 @@
 # Suno WAV Edge Fixer — User Manual
 
-**Applies to v0.3.2 · Updated November 14, 2026**
+**Applies to v0.3.3 · Updated November 14, 2026**
 
 ## 1. Purpose
 
@@ -36,7 +36,11 @@ The **Display gain** slider multiplies the waveform **for display only**. For ex
 
 The left-hand scale is **dBFS of the underlying sample amplitude**, not LUFS or perceived loudness. With a +40 dB display gain, the top/bottom edges represent approximately −40 dBFS; half that distance from the center represents −46 dBFS; one quarter represents −52 dBFS. The center is zero amplitude (−∞ dBFS). Positive and negative excursions are mirrored; channels share the plot instead of appearing as separate tracks. These are axis marks, not automated peak measurements.
 
-**Selecting time ranges:** Drag over the Head waveform to select a range. Drag over the Tail waveform, or **single-click the Tail waveform to select from that point through the end**. The highlighted selection and its start/end/duration appear below the graph. Editing boundaries are aligned to audio sample frames.
+Earlier releases selected through the file end when Tail was clicked. This release uses a **zero-width position selection** instead. To play, silence or fade through the end, drag from the intended start to the right edge of the waveform.
+
+**Selecting time ranges:** Drag over Head or Tail to select a range. A click on Head clears the selection. A click on Tail replaces any range with a **zero-width selection at that position**, shown as a vertical line and a **Position** time. This position is used only by **Trim from selection start**. Playback, noise preview, silence and fade require a dragged range. Moving the mouse without pressing the button does not move the selection. Editing boundaries are aligned to audio sample frames.
+
+Each panel wraps its controls independently according to their width and the available space. Head may fit on one row while Tail uses two. Space for selection information is reserved even when nothing is selected, so switching between empty, position and range states does not change waveform height. Unusually long text stays on one line; hover over an abbreviated label to read it in full.
 
 Selection follows the pointer only while the primary button is held. Releasing the button, losing window focus, or losing pointer capture ends the drag. Wheel zoom ends any active drag and clears that waveform's selection.
 
@@ -48,11 +52,11 @@ Selection follows the pointer only while the primary button is held. Releasing t
 
 ## 5. Tail operations
 
-**Silence selection:** Remove unwanted sound or clicks after the music ends. You can click once to select through the end, or drag to isolate a shorter range.
+**Silence selection:** Remove unwanted sound or clicks after the music ends. Drag over the desired range. To silence through the end, drag from the intended start to the right edge of the waveform.
 
-**Fade out selection:** Choose the fade interval and press **Fade out selection**. The amplitude decreases linearly until the last selected sample, which is set to zero. To fade to the actual file end, single-click the Tail waveform at the intended fade start.
+**Fade out selection:** Drag over the fade interval and press **Fade out selection**. The amplitude decreases linearly until the last selected sample, which is set to zero. To fade to the actual file end, drag from the intended fade start to the right edge of the Tail waveform.
 
-**Trim from selection start:** Choose the new ending location by clicking or dragging in the Tail waveform. Press **Trim from selection start** to **delete everything from the selected start to the original end**, regardless of where the selection ends. The duration and waveform update immediately. An abrupt trim may produce a click; consider a short fade before the new endpoint.
+**Trim from selection start:** Click the intended new ending location in the Tail waveform to select that position with zero width. Press **Trim from selection start** to **delete everything from that position to the original end**. If a range was selected by dragging, trimming starts at its left edge instead. The duration and waveform update immediately. An abrupt trim may produce a click; consider a short fade before the new endpoint.
 
 **Append silence:** Enter a number of milliseconds in **Silence to add** (default **200 ms**, valid **1–30,000 ms**) and press **Append silence**. The added samples are digital silence. The exact resulting duration is quantized to whole sample frames. For typical repairs, **trim → fade out → append a little silence if needed** is an understandable sequence.
 
@@ -114,7 +118,7 @@ Unusual WAVE chunk structures or location-dependent metadata may not be fully su
 - **Cannot find an exported file:** inspect your browser's download list (usually `Ctrl + J`) and download settings.
 - **Filename has `(1)` added:** this is your browser avoiding a same-name file collision.
 - **Removed a file accidentally:** import the original file again; queued edits for it cannot be recovered.
-- **Only want to trim the last second:** click at the desired new endpoint and use **Trim from selection start**—it is not a general-purpose delete-selected-range command.
+- **Only want to trim the last second:** click the desired new endpoint, then use **Trim from selection start**. A dragged range is not required.
 - **Privacy:** imported WAV data are processed locally in the browser; the application contains no upload endpoint or external analytics code. Website hosting access logs are a separate matter.
 
 ## 10. License
