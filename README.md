@@ -1,6 +1,8 @@
 # Suno WAV Edge Fixer
 
-**バージョン：v0.3.1**
+**バージョン：v0.3.2**
+
+v0.3.2では、マウスを離した後も波形の選択が追従する問題と、ドラッグ中のホイール操作によるエラーを修正しました。
 
 **Sunoなどで生成したWAV音源の先頭・末尾だけを、ブラウザで手早く修正するツールです。**
 
@@ -8,7 +10,7 @@
 
 - **インストール不要**：`index.html` を Chrome / Edge で開くだけ（オフライン動作）。
 - **波形の表示ゲイン 0〜+60 dB**：実際の音源を増幅せず、極小ノイズを視認。
-- **ノイズ確認（v0.3.1）**：「選択範囲を再生」の左のボタンで、小さな音を試聴用に自動増幅。出力ピークと短時間RMSで増幅量を抑え、保存するWAVは変更しません。
+- **ノイズ確認**：「選択範囲を再生」の左のボタンで、小さな音を試聴用に自動増幅。出力ピークと短時間RMSで増幅量を抑え、保存するWAVは変更しません。
 - **先頭**：範囲の無音化・フェードイン。
 - **末尾**：範囲の無音化・フェードアウト・指定位置以降の切り詰め・無音の追加。
 - **原音の維持**：対応するWAVのPCMサンプルを直接編集。未編集区間を再エンコードしません。
@@ -69,6 +71,6 @@ MIT License — Copyright (c) 2026 cityedge. 詳細は [LICENSE](LICENSE) を参
 
 ## English overview
 
-**Suno WAV Edge Fixer v0.3.1** is a lightweight, offline, browser-based editor for cleaning up the **beginning and end** of WAV tracks. Inspect very quiet clicks using display-only gain (+0 to +60 dB), audition them with **Check noise**, silence a selection, apply a linear fade-in/out, trim the end, or append silence. Queue multiple tracks, download each edited WAV under its original filename, or remove unaffected tracks from the list without downloading them.
+**Suno WAV Edge Fixer v0.3.2** is a lightweight, offline, browser-based editor for cleaning up the **beginning and end** of WAV tracks. Inspect very quiet clicks using display-only gain (+0 to +60 dB), audition them with **Check noise**, silence a selection, apply a linear fade-in/out, trim the end, or append silence. Queue multiple tracks, download each edited WAV under its original filename, or remove unaffected tracks from the list without downloading them.
 
 Open `index.html` in desktop Chrome or Edge; no installation, build process, server, or upload is required. The interface supports both Japanese and English. Output remains in the source WAV's sample rate, channel count and sample format. **See the [English user manual](USER_MANUAL_EN.md)** for steps, shortcuts and limitations. Licensed under the [MIT License](LICENSE).

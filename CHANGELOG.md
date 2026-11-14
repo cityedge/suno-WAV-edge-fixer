@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.3.2 — 2026-11-14
+
+- Fixed waveform selection continuing on hover after pointer capture or window focus was lost. Selection now also checks the pressed mouse button and active pointer.
+- Cancel an active waveform drag before wheel zoom clears the selection, preventing a subsequent pointer move from raising an error. Normal tail click-to-end selection is preserved.
+
 ## v0.3.1 — 2026-10-09
 
 - Added **Check noise** buttons to Head and Tail, immediately before **Play selection** in the existing control rows.

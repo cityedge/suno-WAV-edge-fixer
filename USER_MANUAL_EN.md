@@ -1,6 +1,6 @@
 # Suno WAV Edge Fixer — User Manual
 
-**Applies to v0.3.1 · Updated October 9, 2026**
+**Applies to v0.3.2 · Updated November 14, 2026**
 
 ## 1. Purpose
 
@@ -37,6 +37,8 @@ The **Display gain** slider multiplies the waveform **for display only**. For ex
 The left-hand scale is **dBFS of the underlying sample amplitude**, not LUFS or perceived loudness. With a +40 dB display gain, the top/bottom edges represent approximately −40 dBFS; half that distance from the center represents −46 dBFS; one quarter represents −52 dBFS. The center is zero amplitude (−∞ dBFS). Positive and negative excursions are mirrored; channels share the plot instead of appearing as separate tracks. These are axis marks, not automated peak measurements.
 
 **Selecting time ranges:** Drag over the Head waveform to select a range. Drag over the Tail waveform, or **single-click the Tail waveform to select from that point through the end**. The highlighted selection and its start/end/duration appear below the graph. Editing boundaries are aligned to audio sample frames.
+
+Selection follows the pointer only while the primary button is held. Releasing the button, losing window focus, or losing pointer capture ends the drag. Wheel zoom ends any active drag and clears that waveform's selection.
 
 ## 4. Head operations
 
